@@ -2,7 +2,7 @@
 /*
 Plugin Name: Traffic Accident Heatmap
 Description: Displays a heatmap of traffic accidents in Melbourne
-Version: 1.2
+Version: 1.3
 Author: YuxiangHao
 */
 
@@ -49,9 +49,14 @@ function traffic_accident_heatmap_shortcode() {
     }
     .filter-container {
         margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+    }
+    .filter-container label, .filter-container input, .filter-container button {
+        margin-right: 10px;
     }
     .filter-container input {
-        margin-right: 10px;
+        width: 150px; /* 调整输入框的宽度 */
     }
     </style>
 
