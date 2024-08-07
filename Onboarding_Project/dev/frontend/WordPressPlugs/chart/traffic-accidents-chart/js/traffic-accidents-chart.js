@@ -81,12 +81,23 @@ document.addEventListener('DOMContentLoaded', function() {
                         beginAtZero: true
                     },
                     y: {
-                        barThickness: 40
+                        barThickness: 40  // Increase bar thickness
                     }
                 },
                 maintainAspectRatio: false
             }
         });
+
+        updateScrollFeedback();
+    }
+
+    function updateScrollFeedback() {
+        const totalItems = currentDataset.length;
+        const currentPosition = currentStartIndex + 1;
+        const endPosition = Math.min(currentStartIndex + 20, totalItems);
+        
+        const feedbackElement = document.getElementById('scrollFeedback');
+        feedbackElement.textContent = `Showing ${currentPosition}-${endPosition} of ${totalItems} items`;
     }
 
     document.getElementById('filterDates').addEventListener('click', function() {

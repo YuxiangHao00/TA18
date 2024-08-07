@@ -2,7 +2,7 @@
 /*
 Plugin Name: Traffic Accidents Chart
 Description: Display traffic accidents data in a vertical bar chart with date filtering and sorting options
-Version: 1.6
+Version: 1.7
 Author: YuxiangHao
 */
 
@@ -12,7 +12,7 @@ function traffic_accidents_chart_shortcode() {
     $csv_url = plugins_url('data/merged_bicycle_accidents.csv', __FILE__);
     
     wp_enqueue_script('chartjs', 'https://cdn.jsdelivr.net/npm/chart.js', array(), null, true);
-    wp_enqueue_script('traffic-accidents-chart', plugins_url('js/traffic-accidents-chart.js', __FILE__), array('chartjs'), '1.6', true);
+    wp_enqueue_script('traffic-accidents-chart', plugins_url('js/traffic-accidents-chart.js', __FILE__), array('chartjs'), '1.7', true);
     
     wp_localize_script('traffic-accidents-chart', 'chartData', array(
         'csvUrl' => $csv_url
@@ -21,8 +21,8 @@ function traffic_accidents_chart_shortcode() {
     return '
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
         <div>
-            <input type="date" id="startDate" style="width: 130px;">
-            <input type="date" id="endDate" style="width: 130px;">
+            <input type="date" id="startDate" style="width: 150px;">
+            <input type="date" id="endDate" style="width: 150px;">
             <button id="filterDates">Filter</button>
             <button id="resetDates">Reset</button>
         </div>
@@ -33,6 +33,7 @@ function traffic_accidents_chart_shortcode() {
     </div>
     <div id="chartContainer" style="height: 500px; width: 100%; overflow-y: hidden;">
         <canvas id="trafficAccidentsChart" width="400" height="1000"></canvas>
-    </div>';
+    </div>
+    <div id="scrollFeedback" style="text-align: center; margin-top: 10px;"></div>';
 }
 add_shortcode('traffic_accidents_chart', 'traffic_accidents_chart_shortcode');
