@@ -2,10 +2,15 @@ document.addEventListener('DOMContentLoaded', function() {
     let chart;
     let allData = [];
     let currentDataset = [];
+    let currentStartIndex = 0;
 
     // Force English locale for date inputs
     document.getElementById('startDate').lang = 'en-US';
     document.getElementById('endDate').lang = 'en-US';
+
+    // Set placeholder text in English
+    document.getElementById('startDate').placeholder = 'Start Date';
+    document.getElementById('endDate').placeholder = 'End Date';
 
     fetch(chartData.csvUrl)
         .then(response => response.text())
@@ -43,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
         currentDataset = Object.entries(lgaData)
             .sort((a, b) => sortOrder === 'asc' ? a[1] - b[1] : b[1] - a[1]);
 
-        renderChart(0);
+        renderChart(currentStartIndex);
     }
 
     function renderChart(startIndex) {
@@ -100,40 +105,13 @@ document.addEventListener('DOMContentLoaded', function() {
         updateChart();
     });
 
-    const scrollbar = document.getElementById('scrollbar');
-    const scrollHandle = document.getElementById('scrollHandle');
-    const scrollProgress = document.getElementById('scrollProgress');
-    let isDragging = false;
-
-    scrollbar.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        updateScrollPosition(e);
-    });
-
-    document.addEventListener('mousemove', (e) => {
-        if (isDragging) {
-            updateScrollPosition(e);
+    document.getElementById('chartContainer').addEventListener('wheel', function(e) {
+        e.preventDefault();
+        if (e.deltaY > 0 && currentStartIndex + 20 < currentDataset.length) {
+            currentStartIndex++;
+        } else if (e.deltaY < 0 && currentStartIndex > 0) {
+            currentStartIndex--;
         }
+        renderChart(currentStartIndex);
     });
-
-    document.addEventListener('mouseup', () => {
-        isDragging = false;
-    });
-
-    function updateScrollPosition(e) {
-        const scrollbarRect = scrollbar.getBoundingClientRect();
-        let position = (e.clientY - scrollbarRect.top) / scrollbarRect.height;
-        position = Math.max(0, Math.min(position, 1));
-        
-        const maxStartIndex = Math.max(0, currentDataset.length - 20);
-        const startIndex = Math.round(position * maxStartIndex);
-        
-        scrollHandle.style.top = `${position * (scrollbarRect.height - scrollHandle.offsetHeight)}px`;
-        renderChart(startIndex);
-
-        // Update progress display
-        const currentPage = Math.floor(startIndex / 20) + 1;
-        const totalPages = Math.ceil(currentDataset.length / 20);
-        scrollProgress.textContent = `${currentPage}/${totalPages}`;
-    }
 });
