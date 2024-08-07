@@ -10,15 +10,50 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        flatpickr("#start-date", { dateFormat: "Y-m-d", locale: "en" });
-        flatpickr("#end-date", { dateFormat: "Y-m-d", locale: "en" });
+        flatpickr("#start-date", {
+            dateFormat: "Y-m-d",
+            locale: "en"
+        });
+
+        flatpickr("#end-date", {
+            dateFormat: "Y-m-d",
+            locale: "en"
+        });
 
         var map = L.map('map').setView([-37.8136, 144.9631], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        setTimeout(function() { map.invalidateSize(); }, 100);
+        setTimeout(function() {
+            map.invalidateSize();
+        }, 100);
+
+        // Load GeoJSON and add to map
+        fetch('path_to_your_geojson_file.geojson')
+            .then(response => response.json())
+            .then(geojsonData => {
+                L.geoJSON(geojsonData, {
+                    style: function(feature) {
+                        return {
+                            fillColor: getRiskColor(feature.properties.riskLevel),
+                            weight: 2,
+                            opacity: 1,
+                            color: 'white',
+                            dashArray: '3',
+                            fillOpacity: 0.7
+                        };
+                    }
+                }).addTo(map);
+            });
+
+        function getRiskColor(d) {
+            return d > 80 ? '#FF0000' :
+                   d > 60 ? '#FFA500' :
+                   d > 40 ? '#FFFF00' :
+                   d > 20 ? '#ADFF2F' :
+                            '#00FF00';
+        }
 
         var heatLayer = L.heatLayer(accidents_with_details.map(function(p) {
             return [p[3], p[4], 1];
@@ -33,54 +68,42 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }).addTo(map);
 
-        fetch('http://13.239.109.179/wp-content/uploads/2024/08/melbourne_zones.geojson')
-            .then(function(response) {
-                return response.json();
-            })
-            .then(function(data) {
-                L.geoJSON(data, {
-                    style: function(feature) {
-                        var accidentCount = getAccidentCountForZone(feature);
-                        return {
-                            fillColor: getColor(accidentCount),
-                            weight: 2,
-                            opacity: 1,
-                            color: 'white',
-                            dashArray: '3',
-                            fillOpacity: 0.7
-                        };
-                    }
-                }).addTo(map);
-            })
-            .catch(function(error) {
-                console.error('Error loading the GeoJSON file:', error);
-            });
+        var markers = L.markerClusterGroup();
 
-        function getAccidentCountForZone(feature) {
-            var bounds = L.geoJSON(feature).getBounds();
-            var count = 0;
-            accidents_with_details.forEach(function(p) {
-                var latlng = L.latLng(p[3], p[4]);
-                if (bounds.contains(latlng)) {
-                    count++;
+        var accidentIcon = L.icon({
+            iconUrl: 'https://ta18.org/wp-content/uploads/2024/08/accident_icon_2.png',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10],
+            popupAnchor: [0, -10],
+            shadowUrl: null,
+            shadowSize: null,
+            shadowAnchor: null
+        });
+
+        function updateMarkers(filteredData) {
+            markers.clearLayers();
+            var bounds = map.getBounds();
+            filteredData.forEach(function(p) {
+                var lat = p[3];
+                var lng = p[4];
+                if (bounds.contains([lat, lng])) {
+                    var marker = L.marker([lat, lng], { icon: accidentIcon });
+                    marker.bindPopup("<b>Date:</b> " + p[1] + "<br><b>Description:</b> " + p[2]);
+                    markers.addLayer(marker);
                 }
             });
-            return count;
         }
 
-        function getColor(d) {
-            return d > 100 ? '#800026' :
-                   d > 50  ? '#BD0026' :
-                   d > 20  ? '#E31A1C' :
-                   d > 10  ? '#FC4E2A' :
-                   d > 5   ? '#FD8D3C' :
-                   d > 1   ? '#FEB24C' :
-                            '#FFEDA0';
+        function updateHeatmap(filteredData) {
+            heatLayer.setLatLngs(filteredData.map(function(p) {
+                return [p[3], p[4], 1];
+            }));
         }
 
         window.filterAccidents = function() {
             var startDate = document.getElementById('start-date').value;
             var endDate = document.getElementById('end-date').value;
+
             var filteredData = accidents_with_details;
 
             if (startDate && endDate) {
@@ -90,18 +113,62 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
 
-            heatLayer.setLatLngs(filteredData.map(function(p) {
-                return [p[3], p[4], 1];
-            }));
+            if (map.getZoom() > 17) {
+                updateMarkers(filteredData);
+            }
+            updateHeatmap(filteredData);
         }
 
         window.resetFilters = function() {
             document.getElementById('start-date').value = '';
             document.getElementById('end-date').value = '';
-            heatLayer.setLatLngs(accidents_with_details.map(function(p) {
-                return [p[3], p[4], 1];
-            }));
+            if (map.getZoom() > 17) {
+                updateMarkers(accidents_with_details);
+            }
+            updateHeatmap(accidents_with_details);
         }
+
+        function checkZoomAndUpdateMarkers() {
+            if (map.getZoom() > 17) {
+                if (!map.hasLayer(markers)) {
+                    map.addLayer(markers);
+                }
+                filterAccidents();
+            } else {
+                if (map.hasLayer(markers)) {
+                    map.removeLayer(markers);
+                }
+                updateHeatmap(accidents_with_details);
+            }
+        }
+
+        map.on('zoomend', checkZoomAndUpdateMarkers);
+        map.on('moveend', function() {
+            if (map.getZoom() > 17) {
+                filterAccidents();
+            }
+        });
+
+        updateHeatmap(accidents_with_details);
+
+        var legend = L.control({position: 'bottomright'});
+
+        legend.onAdd = function (map) {
+            var div = L.DomUtil.create('div', 'legend'),
+                grades = [0, 20, 40, 60, 80, 100],
+                labels = [];
+
+            div.innerHTML += '<strong>Accident Density</strong><br>';
+            for (var i = 0; i < grades.length - 1; i++) {
+                div.innerHTML +=
+                    '<i style="background:' + getRiskColor(grades[i + 1]) + '"></i> ' +
+                    grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+            }
+
+            return div;
+        };
+
+        legend.addTo(map);
 
     } catch (error) {
         console.error("An error occurred:", error);

@@ -1,4 +1,5 @@
 <?php
+// Shortcode function
 function traffic_accident_heatmap_shortcode() {
     ob_start();
     ?>
@@ -33,7 +34,7 @@ function traffic_accident_heatmap_shortcode() {
         margin-right: 10px;
     }
     .filter-container input {
-        width: 150px; /* Adjust the width of input boxes */
+        width: 150px;
     }
     </style>
 
@@ -50,4 +51,3 @@ function traffic_accident_heatmap_shortcode() {
     return ob_get_clean();
 }
 add_shortcode('traffic_accident_heatmap', 'traffic_accident_heatmap_shortcode');
-?>
