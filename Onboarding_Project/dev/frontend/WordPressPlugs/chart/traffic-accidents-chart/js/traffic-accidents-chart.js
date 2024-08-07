@@ -3,6 +3,10 @@ document.addEventListener('DOMContentLoaded', function() {
     let allData = [];
     let currentDataset = [];
 
+    // Force English locale for date inputs
+    document.getElementById('startDate').lang = 'en-US';
+    document.getElementById('endDate').lang = 'en-US';
+
     fetch(chartData.csvUrl)
         .then(response => response.text())
         .then(data => {
@@ -72,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         beginAtZero: true
                     },
                     y: {
-                        barThickness: 20  // 增加柱状图的粗细
+                        barThickness: 40  // 进一步加粗柱状图
                     }
                 },
                 maintainAspectRatio: false
@@ -98,6 +102,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const scrollbar = document.getElementById('scrollbar');
     const scrollHandle = document.getElementById('scrollHandle');
+    const scrollProgress = document.getElementById('scrollProgress');
     let isDragging = false;
 
     scrollbar.addEventListener('mousedown', (e) => {
@@ -125,5 +130,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         scrollHandle.style.top = `${position * (scrollbarRect.height - scrollHandle.offsetHeight)}px`;
         renderChart(startIndex);
+
+        // Update progress display
+        const currentPage = Math.floor(startIndex / 20) + 1;
+        const totalPages = Math.ceil(currentDataset.length / 20);
+        scrollProgress.textContent = `${currentPage}/${totalPages}`;
     }
 });
