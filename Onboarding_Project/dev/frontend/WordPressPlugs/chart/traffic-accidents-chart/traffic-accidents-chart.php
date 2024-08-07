@@ -2,7 +2,7 @@
 /*
 Plugin Name: Traffic Accidents Chart
 Description: Display traffic accidents data in a vertical bar chart with date filtering and sorting options
-Version: 1.7
+Version: 1.8
 Author: YuxiangHao
 */
 

@@ -48,11 +48,12 @@ document.addEventListener('DOMContentLoaded', function() {
         currentDataset = Object.entries(lgaData)
             .sort((a, b) => sortOrder === 'asc' ? a[1] - b[1] : b[1] - a[1]);
 
-        renderChart(currentStartIndex);
+        currentStartIndex = 0;  // Reset to top when updating chart
+        renderChart();
     }
 
-    function renderChart(startIndex) {
-        const displayData = currentDataset.slice(startIndex, startIndex + 20);
+    function renderChart() {
+        const displayData = currentDataset.slice(currentStartIndex, currentStartIndex + 20);
         const labels = displayData.map(item => item[0]);
         const values = displayData.map(item => item[1]);
 
@@ -118,11 +119,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('chartContainer').addEventListener('wheel', function(e) {
         e.preventDefault();
-        if (e.deltaY > 0 && currentStartIndex + 20 < currentDataset.length) {
-            currentStartIndex++;
+        const maxStartIndex = Math.max(0, currentDataset.length - 20);
+        
+        if (e.deltaY > 0 && currentStartIndex < maxStartIndex) {
+            currentStartIndex = Math.min(currentStartIndex + 1, maxStartIndex);
+            renderChart();
         } else if (e.deltaY < 0 && currentStartIndex > 0) {
             currentStartIndex--;
+            renderChart();
         }
-        renderChart(currentStartIndex);
+        // If at top or bottom, do nothing
     });
 });
