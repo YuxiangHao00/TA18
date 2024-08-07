@@ -70,6 +70,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 scales: {
                     x: {
                         beginAtZero: true
+                    },
+                    y: {
+                        barThickness: 20  // 增加柱状图的粗细
                     }
                 },
                 maintainAspectRatio: false
@@ -114,13 +117,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateScrollPosition(e) {
         const scrollbarRect = scrollbar.getBoundingClientRect();
-        let position = (e.clientX - scrollbarRect.left) / scrollbarRect.width;
+        let position = (e.clientY - scrollbarRect.top) / scrollbarRect.height;
         position = Math.max(0, Math.min(position, 1));
         
         const maxStartIndex = Math.max(0, currentDataset.length - 20);
         const startIndex = Math.round(position * maxStartIndex);
         
-        scrollHandle.style.left = `${position * (scrollbarRect.width - scrollHandle.offsetWidth)}px`;
+        scrollHandle.style.top = `${position * (scrollbarRect.height - scrollHandle.offsetHeight)}px`;
         renderChart(startIndex);
     }
 });
