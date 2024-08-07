@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         beginAtZero: true
                     },
                     y: {
-                        barThickness: 40  // 进一步加粗柱状图
+                        barThickness: 40
                     }
                 },
                 maintainAspectRatio: false
