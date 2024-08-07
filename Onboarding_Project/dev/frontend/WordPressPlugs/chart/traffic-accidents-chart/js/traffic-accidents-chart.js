@@ -1,16 +1,17 @@
 document.addEventListener('DOMContentLoaded', function() {
     let chart;
     let allData = [];
+    let currentDataset = [];
 
     fetch(chartData.csvUrl)
         .then(response => response.text())
         .then(data => {
-            const rows = data.split('\n').slice(1); // Skip header row
+            const rows = data.split('\n').slice(1);
             
             rows.forEach(row => {
                 const columns = row.split(',');
-                const date = new Date(columns[1]); // Assuming date is in the 2nd column
-                const lga = columns[5]; // Assuming LGA is in the 6th column
+                const date = new Date(columns[1]);
+                const lga = columns[5];
                 
                 allData.push({date: date, lga: lga});
             });
@@ -35,12 +36,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         const sortOrder = document.getElementById('sortOrder').value;
-        const sortedData = Object.entries(lgaData)
-            .sort((a, b) => sortOrder === 'asc' ? a[1] - b[1] : b[1] - a[1])
-            .slice(0, 20);
+        currentDataset = Object.entries(lgaData)
+            .sort((a, b) => sortOrder === 'asc' ? a[1] - b[1] : b[1] - a[1]);
 
-        const labels = sortedData.map(item => item[0]);
-        const values = sortedData.map(item => item[1]);
+        renderChart(0);
+    }
+
+    function renderChart(startIndex) {
+        const displayData = currentDataset.slice(startIndex, startIndex + 20);
+        const labels = displayData.map(item => item[0]);
+        const values = displayData.map(item => item[1]);
 
         const ctx = document.getElementById('trafficAccidentsChart').getContext('2d');
 
@@ -87,4 +92,35 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('sortOrder').addEventListener('change', function() {
         updateChart();
     });
+
+    const scrollbar = document.getElementById('scrollbar');
+    const scrollHandle = document.getElementById('scrollHandle');
+    let isDragging = false;
+
+    scrollbar.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        updateScrollPosition(e);
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+            updateScrollPosition(e);
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        isDragging = false;
+    });
+
+    function updateScrollPosition(e) {
+        const scrollbarRect = scrollbar.getBoundingClientRect();
+        let position = (e.clientX - scrollbarRect.left) / scrollbarRect.width;
+        position = Math.max(0, Math.min(position, 1));
+        
+        const maxStartIndex = Math.max(0, currentDataset.length - 20);
+        const startIndex = Math.round(position * maxStartIndex);
+        
+        scrollHandle.style.left = `${position * (scrollbarRect.width - scrollHandle.offsetWidth)}px`;
+        renderChart(startIndex);
+    }
 });
